@@ -32,6 +32,10 @@ function hello( frame_names )
 	log( '--- Hit using 1' );
 	address_map[1].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8" );
 
+	log( '--- Dumping final state' );
+	address_map[1].dump();
+	address_map[2].dump();
+
 	//window.alert('hello: 42');
 
 /*
