@@ -16,6 +16,8 @@ function hello( frame_names )
 
 	// Populate address space
 	address_map[1] = new Agent( 1, address_map, [ 2 ] );
+	address_map[1].add_content( '<html>Including important message: ' +
+		'<iframe src="x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8">' );
 	address_map[1].dump();
 	address_map[2] = new Agent( 2, address_map, [ 1 ] );
 	address_map[2].add_content( 'Hello, world' );
@@ -35,6 +37,9 @@ function hello( frame_names )
 	log( '--- Dumping final state' );
 	address_map[1].dump();
 	address_map[2].dump();
+
+	log( '--- Complex structure retrieval with 1' );
+	address_map[1].SHOW( "x-sha1hash:a34bad256859ebdeda3608a0726544d5d00730d9" );
 
 	//window.alert('hello: 42');
 
