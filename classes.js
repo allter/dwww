@@ -56,6 +56,29 @@ Response.prototype = {
 	is_ok: function () { return ! this.is_error(); }
 };
 
+function DNSResponse ()
+{
+	this.info = [];
+}
+DNSResponse.prototype = new Response();
+DNSResponse.prototype.type = function () { return 'application/x-dns-response'; }
+DNSResponse.prototype.add_info = function ( name, value, type, class )
+{
+	this.info.push( [ name, value, type, ( class || 'IN' ) ] );
+	this.status = 200;
+	return this; // Allows chaining
+};
+DNSResponse.prototype.dump = function ()
+{
+	var res = "";
+	for ( var i in this.info )
+	{
+		var i = this.info[ i ];
+		res += i[3] + "\t" + i[2] + "\t" + i[0] + "\t" + i[1] + "\n";
+	}
+	return res;
+}
+
 // class for x-sha1hash protocol handler
 function Proto_sha1hash( agent )
 {
@@ -106,6 +129,22 @@ Proto_sha1hash.prototype = {
 	},
 };
 
+// Class for x-dns protocol handler
+function Proto_dns ( agent )
+{
+	this.authorities = {};
+}
+Proto_dns.prototype = {
+	schema: 'x-dns',
+	handle_request: function ()
+	{
+	},
+	query_WWW: function ( method, url, args )
+	{
+		return new DNSResponse().add_info( 'vasya.root.', 'A', 1 );
+	}
+};
+
 // class Agent, simulates DWWW agents
 function Agent( id, address_map, neighbours )
 {
@@ -115,6 +154,7 @@ function Agent( id, address_map, neighbours )
 	this.content = {};
 	this.protocols = {};
 	this.protocols[ 'x-sha1hash' ] = new Proto_sha1hash( this );
+	this.protocols[ 'x-dns' ] = new Proto_dns( this );
 }
 Agent.prototype = {
 	make_protocol_request: function ( correspondent, protocol_schema, args )
@@ -145,7 +185,7 @@ Agent.prototype = {
 		var response = this.query_WWW( 'GET', url );
 		if ( response.is_ok() )
 		{
-			this.log( "[" + response.status + "] Showing object: <span style='color:green'>" + this.render_to_html( response ) + "</span>" );
+			this.log( "[" + response.status + "] Showing object " + url + ": <span style='color:green'>" + this.render_to_html( response ) + "</span>" );
 			this.add_content( response.content );
 			return;
 		}
@@ -184,6 +224,10 @@ Agent.prototype = {
 			);
 			html = html.replace( /<[^>]*>/g, '' );
 			return html;
+		}
+		else if ( response.type() == 'application/x-dns-response' )
+		{
+			return "<pre>" + response.dump() + "</pre>";
 		}
 
 		// Escape text/plain and other default junk type's content
