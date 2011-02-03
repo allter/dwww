@@ -13,12 +13,24 @@ function keys( object )
 	return a;
 }
 
+// Object dumper (not all implementation have .toSource)
+function dump_object( object )
+{
+	var res = "{";
+	var k = keys( object );
+	for ( var i in k )
+		res += k[i] + ":" + object[ k[i] ];
+	res += "}";
+	return res;
+}
+
 // Convenience logger
 function log( msg_html )
 {
 	var log_element = $('#log');
 	log_element.append( ( msg_html || '' ) + "<br/>" );
 }
+
 
 // class of Response, a convention for DWWW method responses
 function Response( content, status )
@@ -53,7 +65,6 @@ Proto_sha1hash.prototype = {
 	schema: 'x-sha1hash',
 	handle_request: function( args )
 	{
-//alert( args.sha1hash );
 		if ( this.agent.content[ args.sha1hash ] != null )
 		{
 			this.agent.log( "Returning object: " + this.schema + ":" + args.sha1hash );
@@ -91,7 +102,7 @@ Proto_sha1hash.prototype = {
 				return response;
 		}
 
-		return new Response( null, 500 );
+		return new Response( null, 404 );
 	},
 };
 
@@ -108,7 +119,7 @@ function Agent( id, address_map, neighbours )
 Agent.prototype = {
 	make_protocol_request: function ( correspondent, protocol_schema, args )
 	{
-		this.log( "->" + correspondent + " " + protocol_schema + " " );
+		this.log( "->" + correspondent + " " + protocol_schema + ": " + dump_object( args ) );
 
 		// Doesn't handle FAILs
 		try
@@ -134,13 +145,13 @@ Agent.prototype = {
 		var response = this.query_WWW( 'GET', url );
 		if ( response.is_ok() )
 		{
-			this.log( "Showing object: <span style='color:green'>" + this.to_html( response ) + "</span>" );
+			this.log( "[" + response.status + "] Showing object: <span style='color:green'>" + this.render_to_html( response ) + "</span>" );
 			this.add_content( response.content );
 			return;
 		}
 
 		// Give up
-		this.log_error( "[" + response.status + "]Could not find object " + url );
+		this.log_error( "[" + response.status + "] Could not find object " + url );
 	},
 	query_WWW: function ( method, url, args )
 	{
@@ -156,26 +167,24 @@ Agent.prototype = {
 		// Call protocols' method handler
 		return this.protocols[ parts[0] ].query_WWW( method, url, args );
 	},	
-	to_html: function( response )
+	render_to_html: function( response )
 	{
 		if ( response.type() == 'text/html' )
 		{
 			var html = response.content;
-//this.log( 'here-- ' + html );
 			var _this = this;
 			html = html.replace( /<iframe\s+src\s*=\s*["]([^"]+)["]\s*[^>]*>/g, //"
 				function ( str, p1 )
 				{
 					var response = _this.query_WWW( 'GET', p1 );
 					if ( response.is_ok )
-						return _this.to_html( response );
+						return _this.render_to_html( response );
 					return 'IFRAME INCLUSION FAILED: src=' + p1;
 				}
 			);
 			html = html.replace( /<[^>]*>/g, '' );
 			return html;
 		}
-//this.log( 'there--' );
 
 		// Escape text/plain and other default junk type's content
 		var content = response.content;
@@ -184,28 +193,6 @@ Agent.prototype = {
 		content.replace( /</g, '&lt;' );
 		content.replace( />/g, '&gt;' );
 		return content;
-	},
-	GET: function ( url )
-	{
-		//this.log( "GET " + url );
-		var parts = url.split( ':', 2 );
-
-		// Only the trivial protocol is supported
-		if ( parts[0] != "x-sha1hash" )
-		{
-			this.log_error( "Unsupported protocol" );
-			return new Response( null, 500 );
-		}
-
-		// Searching locally
-		if ( this.content[ parts[1] ] != null )
-		{
-			this.log( "Returning object: " + url );
-			return new Response( this.content[ parts[1] ], 200 );
-		}
-
-		this.log( "Could not find object: " + url );
-		return new Response( null, 500 );
 	},
 	add_content: function ( content )
 	{
