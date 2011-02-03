@@ -44,6 +44,49 @@ Response.prototype = {
 	is_ok: function () { return ! this.is_error(); }
 };
 
+// class for x-sha1hash protocol handler
+function Proto_sha1hash( agent )
+{
+	this.agent = agent;
+}
+Proto_sha1hash.prototype = {
+	GET: function ( url )
+	{
+		var parts = url.split( ':', 2 );
+
+		// Only the trivial protocol is supported
+		if ( parts[0] != "x-sha1hash" )
+		{
+			this.log_error( "Unsupported protocol" );
+			return new Response( null, 500 );
+		}
+
+		// Searching locally
+		if ( this.agent.content[ parts[1] ] != null )
+		{
+			this.log( "Returning object: " + url );
+			return new Response( this.agent.content[ parts[1] ], 200 );
+		}
+
+		this.log( "Could not find object: " + url );
+		return new Response( null, 500 );
+	},
+	query_WWW: function ( method, url, args )
+	{
+		// Simply call all peers starting from ourselves until we receive correct_answer
+		var peers = [ this.agent.id ];
+		peers.push.apply( peers, this.agent.neighbours );
+		for ( var i in peers )
+		{
+			var response = this.agent.msg( peers[i], method, url, args );
+			if ( response.is_ok() )
+				return response;
+		}
+
+		return new Response( null, 500 );
+	},
+};
+
 // class Agent, simulates DWWW agents
 function Agent( id, address_map, neighbours )
 {
@@ -51,6 +94,8 @@ function Agent( id, address_map, neighbours )
 	this.address_map = address_map;
 	this.neighbours = neighbours;
 	this.content = {};
+	this.protocols = {};
+	this.protocols[ 'x-sha1hash' ] = new Proto_sha1hash( this );
 }
 Agent.prototype = {
 	msg: function ( correspondent, method_string, url, args )
@@ -77,14 +122,14 @@ Agent.prototype = {
 		this.log( "SHOW " + url );
 		var parts = url.split( ':', 2 );
 
-		// Only the trivial protocol is supported
-		if ( parts[0] != "x-sha1hash" )
+		// Check if the protocol is supported
+		if ( ! this.protocols[ parts[0] ] )
 		{
-			this.log_error( "Unsupported protocol" );
+			this.log_error( "Unsupported protocol: " + parts[0] );
 			return;
 		}
 
-		var response = this._query_neighbours( 'GET', url );
+		var response = this.query_WWW( 'GET', url );
 		if ( response.is_ok() )
 		{
 			this.log( "Showing object: <span style='color:green'>" + this.to_html( response ) + "</span>" );
@@ -93,22 +138,20 @@ Agent.prototype = {
 		}
 
 		// Give up
-		this.log_error( "Could not find object " + url );
+		this.log_error( "[" + response.status + "]Could not find object " + url );
 	},
-	_query_neighbours: function ( message, url, args )
+	query_WWW: function function ( method, url, args )
 	{
-		// Simply call all peers starting from ourselves until we receive correct_answer
-		var peers = [ this.id ];
-		peers.push.apply( peers, this.neighbours );
-		for ( var i in peers )
-		{
-			var response = this.msg( peers[i], 'GET', url );
-			if ( response.is_ok() )
-				return response;
-		}
+		var parts = url.split( ':', 2 );
 
-		return new Response( null, 500 );
-	},
+		// Check if the protocol is supported
+		if ( ! this.protocols[ parts[0] ] )
+		{
+			this.log_error( "Unsupported protocol: " + parts[0] );
+			return;
+		}
+		return this.protocols[ parts[0] ].query_WWW( method, url, args );
+	},	
 	to_html: function( response )
 	{
 		if ( response.type() == 'text/html' )
@@ -119,7 +162,7 @@ Agent.prototype = {
 			html = html.replace( /<iframe\s+src\s*=\s*["]([^"]+)["]\s*[^>]*>/g, //"
 				function ( str, p1 )
 				{
-					var response = _this._query_neighbours( 'GET', p1 );
+					var response = _this.query_WWW( 'GET', p1 );
 					if ( response.is_ok )
 						return _this.to_html( response );
 					return 'IFRAME INCLUSION FAILED: src=' + p1;
