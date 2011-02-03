@@ -50,35 +50,43 @@ function Proto_sha1hash( agent )
 	this.agent = agent;
 }
 Proto_sha1hash.prototype = {
-	GET: function ( url )
+	schema: 'x-sha1hash',
+	handle_request: function( args )
 	{
-		var parts = url.split( ':', 2 );
-
-		// Only the trivial protocol is supported
-		if ( parts[0] != "x-sha1hash" )
+//alert( args.sha1hash );
+		if ( this.agent.content[ args.sha1hash ] != null )
 		{
-			this.log_error( "Unsupported protocol" );
-			return new Response( null, 500 );
+			this.agent.log( "Returning object: " + this.schema + ":" + args.sha1hash );
+			return new Response( this.agent.content[ args.sha1hash ], 200 );
 		}
 
-		// Searching locally
-		if ( this.agent.content[ parts[1] ] != null )
-		{
-			this.log( "Returning object: " + url );
-			return new Response( this.agent.content[ parts[1] ], 200 );
-		}
-
-		this.log( "Could not find object: " + url );
-		return new Response( null, 500 );
+		this.agent.log( "Could not find object: " + this.schema + ":" + args.sha1hash );
+		return new Response( null, 404 );
 	},
 	query_WWW: function ( method, url, args )
 	{
+		var parts = url.split( ':', 2 );
+		if ( parts[0] != this.schema )
+		{
+			this.agent.log_error( 'Tried to process request for wrong schema ' + parts[0] );
+			return new Response( null, 501 );
+		}
+		if ( method != 'GET' )
+		{
+			this.agent.log_error( 'Methods other than GET not supported' );
+			return new Response( null, 501 );
+		}
+
 		// Simply call all peers starting from ourselves until we receive correct_answer
 		var peers = [ this.agent.id ];
 		peers.push.apply( peers, this.agent.neighbours );
 		for ( var i in peers )
 		{
-			var response = this.agent.msg( peers[i], method, url, args );
+			var response = this.agent.make_protocol_request(
+				peers[i],
+				this.schema,
+				{ sha1hash: parts[1] }
+			);
 			if ( response.is_ok() )
 				return response;
 		}
@@ -98,19 +106,21 @@ function Agent( id, address_map, neighbours )
 	this.protocols[ 'x-sha1hash' ] = new Proto_sha1hash( this );
 }
 Agent.prototype = {
-	msg: function ( correspondent, method_string, url, args )
+	make_protocol_request: function ( correspondent, protocol_schema, args )
 	{
-		this.log( "->" + correspondent + " " + method_string + " " + url );
-		if ( method_string != "GET" )
-		{
-			this.log_error( "Unsupported method " + method_string );
-			throw "Unsupported method string" + method_string;
-		}
+		this.log( "->" + correspondent + " " + protocol_schema + " " );
 
 		// Doesn't handle FAILs
 		try
 		{
-			var response = this.address_map[ correspondent ][ method_string]( url, args );
+			var c = this.address_map[ correspondent ];
+			if ( ! c.protocols[ protocol_schema ] )
+			{
+				this.log( "Correspondent " + correspondent + " doesn't support proto " + protocol_schema );
+				return new Response( null, 501 );
+			}
+
+			var response = c.protocols[ protocol_schema ].handle_request( args );
 			return response;
 		}
 		finally
@@ -120,14 +130,6 @@ Agent.prototype = {
 	SHOW: function ( url ) // Pseudo method callable by user, implements functionality of user-agent
 	{
 		this.log( "SHOW " + url );
-		var parts = url.split( ':', 2 );
-
-		// Check if the protocol is supported
-		if ( ! this.protocols[ parts[0] ] )
-		{
-			this.log_error( "Unsupported protocol: " + parts[0] );
-			return;
-		}
 
 		var response = this.query_WWW( 'GET', url );
 		if ( response.is_ok() )
@@ -140,7 +142,7 @@ Agent.prototype = {
 		// Give up
 		this.log_error( "[" + response.status + "]Could not find object " + url );
 	},
-	query_WWW: function function ( method, url, args )
+	query_WWW: function ( method, url, args )
 	{
 		var parts = url.split( ':', 2 );
 
@@ -148,8 +150,10 @@ Agent.prototype = {
 		if ( ! this.protocols[ parts[0] ] )
 		{
 			this.log_error( "Unsupported protocol: " + parts[0] );
-			return;
+			return new Response( null, 501 );
 		}
+
+		// Call protocols' method handler
 		return this.protocols[ parts[0] ].query_WWW( method, url, args );
 	},	
 	to_html: function( response )
