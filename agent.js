@@ -56,6 +56,7 @@ Agent.prototype = {
 	},
 	query_WWW: function ( method, url, args )
 	{
+//this.log( 'q_W method=' + method + ", url=" + url );
 		var parts = url.split( ':', 2 );
 
 		// Check if the protocol is supported

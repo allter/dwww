@@ -12,6 +12,7 @@ function URI ( uri )
 	Dynamic members:
 	this.uri_original
 	this.schema
+	this.schema_specific
 	this.authority
 	this.path
 	this.segment_id
@@ -20,26 +21,33 @@ function URI ( uri )
 */
 };
 URI.prototype = {
+	authority_is_address: function ()
+	{
+		if ( ! this.authority )
+			return false;
+		if ( this.authority.match( /^\d+$/ ) )
+			return true;
+		return false;
+	},
 	parse_uri: function ( uri )
 	{
 		this.uri_original = uri;
 
 		// Get schema
 		var parts = uri.split( ':', 2 );
-		var schema_specific;
 		if ( parts[1] != '' )
 		{
 			this.schema = parts[0];
-			schema_specific = parts[1];
+			this.schema_specific = parts[1];
 		}
 		else
 		{
 			this.schema = null;
-			schema_specific = parts[0];
+			this.schema_specific = parts[0];
 		}
 
 		// Get segment_id
-		var partsh = schema_specific.split( '#', 2 );
+		var partsh = this.schema_specific.split( '#', 2 );
 		var actual_uri = partsh[0];
 		if ( partsh[1] != '' )
 			this.segment_id = partsh[1]; /// TODOOO
@@ -55,7 +63,7 @@ URI.prototype = {
 		{
 			var parts2 = parts1[1].split( '/', 2 );
 			this.authority = parts2[0];
-			this.path = '/' + parts2[1];
+			this.path = '/' + ( parts2[1] || '' );
 		}
 		else
 		{

@@ -48,16 +48,28 @@ this.log( uri.path );
 			this.agent.log_error( 'Methods other than GET not supported' );
 			return new Response( null, 501 );
 		}
-
 		if ( ! uri.authority )
 		{
 			this.agent.log_error( 'This protocol requires authority' );
 			return new Response( null, 501 );
 		}
 
-		var res = this.agent.make_protocol_request( uri.authority, this.schema, { method: method, url: url } );
+		// Resolve to address of server
+this.log( uri.authority_is_address() );
+		var address = uri.authority;
+		if ( ! uri.authority_is_address() )
+		{
+//this.log( '---: ' + 'x-dns:' + uri.authority );
+			var res_dns = this.agent.query_WWW( 'GET', 'x-dns:' + uri.authority );
+//this.log( '------' );
+			if ( res_dns.is_error() )
+				return new Response( null, 501 ); // TODO correct code
+			address = res_dns.get_value( 'A', uri.authority );
+		}
+
+		// Request actual server
+		var res = this.agent.make_protocol_request( address, this.schema, { method: method, url: url } );
 		return res;
-		
 /*
 		// Find URI to content
 		var res_dns = this.agent.query_WWW( 'GET', 'x-dns:' + parts[1] + "?type=URI" );
