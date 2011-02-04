@@ -9,23 +9,9 @@
 	<script language="javascript" src="classes.js"></script>
 	<script language="javascript" src="proto_dns.js"></script>
 	<script language="javascript" src="proto_sha1hash.js"></script>
-	<script language="javascript" src="script.js"></script>
 </head>
-<!--
-<frameset cols="50%,50%" onload="hello( [ 'f1', 'f2', 'f3', 'f4' ] )">
-	<frameset rows="50%,50%">
-		<frame src="window.html" name="f1">
-		<frame src="window.html" name="f2">
-	</frameset>
-	<frameset rows="50%,50%">
-		<frame src="window.html" name="f3">
-		<frame src="window.html" name="f4">
-	</frameset>
-</frameset>
-</html>
--->
 
-<body onload="hello( [ 'f1' ] )">
+<body>
 	<div id="sample" style="display: none">
 		<p class="a">src</p>
 	</div>
@@ -33,5 +19,43 @@
 	</div>
 	<div id="log">
 	</div>
+
+	<script type="text/javascript"><!--
+
+	// Simulates abstract mapping from scalar address space to objects
+	var address_map = {
+	};
+
+	// Populate address space
+	address_map[1] = new Agent( 1, address_map, [ 2 ] );
+	address_map[1].add_content( '<html>Including important message: ' +
+		'<iframe src="x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8">' );
+	address_map[1].dump();
+	address_map[2] = new Agent( 2, address_map, [ 1 ] );
+	address_map[2].add_content( 'Hello, world' );
+	address_map[2].dump();
+
+	log( '--- Playing with 2' );
+	address_map[2].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8" );
+	address_map[2].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc9" );
+
+	log( '--- Playing with 1' );
+	address_map[1].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8" );
+	address_map[1].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc9" );
+
+	log( '--- Hit using 1' );
+	address_map[1].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8" );
+
+	log( '--- Dumping final state' );
+	address_map[1].dump();
+	address_map[2].dump();
+
+	log( '--- Complex structure retrieval with 1' );
+	address_map[1].SHOW( "x-sha1hash:a34bad256859ebdeda3608a0726544d5d00730d9" );
+
+
+	//-->
+	</script>
+
 </body>
 </html>
