@@ -98,13 +98,14 @@ Proto_dns.prototype = {
 	query_local: function ( type, fqdn )
 	{
 this.log( "query_local: type=" + type + ", fqdn=" + fqdn );
+		if ( ! this.database[ type ] ) return new Response( null, 404 );
 		var values = this.database[ type ][ fqdn ];
 		if ( !values || ! values.length ) return new Response( null, 404 );
 
 		var response = new DNSResponse();
 		for ( var i in values )
 		{
-//this.log( fqdn + "-" + values[i][0] + "-" + type );
+this.log( "query_local: adding to response: " + "type=" + type + ", fqdn=" + fqdn + ", value=" + values[i][0] );
 			response.add_info( fqdn, values[i][0], type );
 		}
 		return response;
@@ -164,6 +165,7 @@ this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + ", srv=" + server 
 			}
 			else
 			{
+//this.log( '--- ' );
 				var res_cur_dn = this.query_local( type, cur_dn );
 //this.log( '---: ' + res_cur_dn.dump() );
 				if ( res_cur_dn.is_error() )

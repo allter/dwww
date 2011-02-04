@@ -37,6 +37,8 @@ Agent.prototype = {
 		{
 		}
 	},
+	proto: function ( schema ) { return this.protocols[ schema ]; },
+	proto_add: function ( schema, proto ) { this.protocols[ schema ] = proto; },
 	SHOW: function ( url ) // Pseudo method callable by user, implements functionality of user-agent
 	{
 		this.log( "SHOW " + url );
