@@ -27,6 +27,8 @@ function Proto_dns ( agent )
 	{
 		this.add_record( 'A', 'vasya.tld.', '3', 1 );
 		this.add_record( 'A', 'ns.tld.', 'DR2', 1 );
+		this.add_record( 'A', 'vasya2.tld.', '2', 1 );
+		this.add_record( 'URI', 'vasya3.tld.', 'x-direct://vasya.tld./index.txt', 1 );
 	}
 }
 Proto_dns.prototype = {

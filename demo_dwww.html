@@ -34,8 +34,10 @@
 	a1.proto_add( 'x-dwww', new Proto_dwww( a1 ) );
 	a1.proto_add( 'x-direct', new Proto_direct( a1 ) );
 	address_map[1].dump();
-	address_map[2] = new Agent( 2, address_map, [ 1 ] );
+	var vasya2 = address_map[2] = new Agent( 2, address_map, [ 1 ] );
 	address_map[2].add_content( 'Hello, world' );
+	//vasya2.proto_add( 'x-direct', new Proto_direct( vasya2 ) );
+	//vasya2.proto( 'x-direct' ).add_document( '/', 'Second hello from Vasya!!' );
 	address_map[2].dump();
 
 	var vasya = address_map[3] = new Agent( 3, address_map, [] );
@@ -50,7 +52,10 @@
 	address_map['DR2'].dump();	
 
 	//address_map[1].SHOW( "x-dns:vasya.tld.?class=IN&type=A");
-	a1.SHOW( "x-dwww:vasya.tld.");
+	a1.SHOW( "x-dwww://vasya.tld.");
+	a1.SHOW( "x-dwww://vasya2.tld.");
+	a1.SHOW( "x-dwww://vasya3.tld.");
+	//a1.SHOW( "x-dwww://vasya3.tld.");
 	a1.SHOW( "x-direct://3/index.txt");
 	a1.SHOW( "x-direct://vasya.tld./index.txt");
 
