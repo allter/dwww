@@ -233,12 +233,15 @@ Proto_dns.prototype = {
 		var dn = parts1[0];
 		var type;
 		var class = 'IN';
-		var parts2 = parts1[1].split( '&' );
-		for ( var i in parts2 )
+		if ( parts1[1] )
 		{
-			var parts3 = parts2[i].split( '=' );
-			if ( parts3[0] == 'type' )
-				type = parts3[1];
+			var parts2 = parts1[1].split( '&' );
+			for ( var i in parts2 )
+			{
+				var parts3 = parts2[i].split( '=' );
+				if ( parts3[0] == 'type' )
+					type = parts3[1];
+			}
 		}
 		if ( ! type ) type = 'A';
 
