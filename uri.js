@@ -9,6 +9,7 @@ function URI ( uri )
 	if ( uri )
 		this.parse_uri( uri );
 /*
+	Dynamic members:
 	this.uri_original
 	this.schema
 	this.authority
@@ -54,7 +55,7 @@ URI.prototype = {
 		{
 			var parts2 = parts1[1].split( '/', 2 );
 			this.authority = parts2[0];
-			this.path = parts2[1];
+			this.path = '/' + parts2[1];
 		}
 		else
 		{
