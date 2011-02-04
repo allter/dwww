@@ -11,6 +11,8 @@ function Proto_dns ( agent )
 	this.database = {}; // db.<type>.<fqdname>[ #record ].value|.trust
 //	this.authorities = {}; // auth.<id>[ #attr ]
 
+	this.log_level = 0;
+
 	// Default resolver settings
 	this.add_record( 'NS', '.', 'sim.root-servers.net.', 0.8 )
 	this.add_record( 'A', 'sim.root-servers.net.', 'DR1', 0.8 )
@@ -99,7 +101,7 @@ Proto_dns.prototype = {
 	},
 	query_local: function ( type, fqdn )
 	{
-this.log( "query_local: type=" + type + ", fqdn=" + fqdn );
+this.log_level && this.log( "query_local: type=" + type + ", fqdn=" + fqdn );
 		if ( ! this.database[ type ] ) return new Response( null, 404 );
 		var values = this.database[ type ][ fqdn ];
 		if ( !values || ! values.length ) return new Response( null, 404 );
@@ -107,14 +109,14 @@ this.log( "query_local: type=" + type + ", fqdn=" + fqdn );
 		var response = new DNSResponse();
 		for ( var i in values )
 		{
-this.log( "query_local: adding to response: " + "type=" + type + ", fqdn=" + fqdn + ", value=" + values[i][0] );
+this.log_level && this.log( "query_local: adding to response: " + "type=" + type + ", fqdn=" + fqdn + ", value=" + values[i][0] );
 			response.add_info( fqdn, values[i][0], type );
 		}
 		return response;
 	},
 	query_dns_server: function ( type, dn, server )
 	{
-this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + ", srv=" + server );
+this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + ", srv=" + server );
 		var res = this.agent.make_protocol_request( server, this.schema, { type: type, fqdn: dn } );
 		if ( res.is_error() )
 			return new Response( null, 404 );
