@@ -90,6 +90,9 @@ DNSResponse.prototype.get_resolved_value = function ()
 DNSResponse.prototype.dump = function ()
 {
 	var res = "";
+	res += ";;source_id: " + this.source_id + "\n";
+	if ( this.query )
+		res += ";;QUESTION:\n;" + this.query[2] + "\t" + this.query[1] + "\t" + this.query[0] + "\n";
 	for ( var i in this.info )
 	{
 		var i = this.info[ i ];
