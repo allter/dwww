@@ -123,6 +123,15 @@ this.log_level && this.log( "query_ddns_server: type=" + type + ", fqdn=" + dn +
 		this.add_response( res, server );
 		return res;
 	},
+	query_dns_server: function ( type, dn, server )
+	{
+this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + ", srv=" + server );
+		var res = this.agent.make_protocol_request( server, 'x-dns', { type: type, fqdn: dn } );
+		if ( res.is_error() )
+			return new Response( null, 404 );
+		this.add_response( res, server );
+		return res;
+	},
 	query_ddns_recursive: function ( type, dn )
 	{
 		var dn_parts = dn.split( '.' );
@@ -156,14 +165,14 @@ this.log_level && this.log( "query_ddns_server: type=" + type + ", fqdn=" + dn +
 				// Load cur_dn zone NS record into local cache
 				var res_cur_dn = this.query_local( 'NS', cur_dn );
 				if ( res_cur_dn.is_error() )
-					res_cur_dn = this.query_ddns_server( 'NS', cur_dn, zone_server_addr );
+					res_cur_dn = this.query_dns_server( 'NS', cur_dn, zone_server_addr );
 				if ( res_cur_dn.is_error() )
 					return new Response( null, 404 );
 
 				// Load cur_dn zone NS's A record into local cache
 				var res_cur_dn_ns_a = this.query_local( 'A', res_cur_dn.get_value( 'NS', cur_dn ) );
 				if ( res_cur_dn_ns_a.is_error() )
-					res_cur_dn_ns_a = this.query_ddns_server( 'A', res_cur_dn.get_value( 'NS', cur_dn ), zone_server_addr );
+					res_cur_dn_ns_a = this.query_dns_server( 'A', res_cur_dn.get_value( 'NS', cur_dn ), zone_server_addr );
 				if ( res_cur_dn_ns_a.is_error() )
 					return new Response( null, 404 );
 			}
@@ -173,7 +182,7 @@ this.log_level && this.log( "query_ddns_server: type=" + type + ", fqdn=" + dn +
 				var res_cur_dn = this.query_local( type, cur_dn );
 //this.log( '---: ' + res_cur_dn.dump() );
 				if ( res_cur_dn.is_error() )
-					res_cur_dn = this.query_ddns_server( type, cur_dn, zone_server_addr );
+					res_cur_dn = this.query_dns_server( type, cur_dn, zone_server_addr );
 //this.log( '---: ' + res_cur_dn.dump() );
 				if ( res_cur_dn.is_error() )
 					return new Response( null, 404 );
