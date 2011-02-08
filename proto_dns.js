@@ -110,7 +110,7 @@ this.log_level && this.log( "query_local: type=" + type + ", fqdn=" + fqdn );
 		for ( var i in values )
 		{
 this.log_level && this.log( "query_local: adding to response: " + "type=" + type + ", fqdn=" + fqdn + ", value=" + values[i][0] );
-			response.add_info( fqdn, values[i][0], type );
+			response.add_info( fqdn, values[i][0], type, null, this.agent.id );
 		}
 		return response;
 	},
