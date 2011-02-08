@@ -106,7 +106,7 @@ this.log_level && this.log( "query_local: type=" + type + ", fqdn=" + fqdn );
 		var values = this.database[ type ][ fqdn ];
 		if ( !values || ! values.length ) return new Response( null, 404 );
 
-		var response = new ddnsResponse();
+		var response = new DNSResponse();
 		for ( var i in values )
 		{
 this.log_level && this.log( "query_local: adding to response: " + "type=" + type + ", fqdn=" + fqdn + ", value=" + values[i][0] );
@@ -117,7 +117,7 @@ this.log_level && this.log( "query_local: adding to response: " + "type=" + type
 	query_ddns_server: function ( type, dn, server )
 	{
 this.log_level && this.log( "query_ddns_server: type=" + type + ", fqdn=" + dn + ", srv=" + server );
-		var res = this.agent.make_protocol_request( server, this.schema, { type: type, fqdn: dn } );
+		var res = this.agent.make_protocol_request( server, 'x-dns', { type: type, fqdn: dn } );
 		if ( res.is_error() )
 			return new Response( null, 404 );
 		this.add_response( res, server );
@@ -183,7 +183,7 @@ this.log_level && this.log( "query_ddns_server: type=" + type + ", fqdn=" + dn +
 			}
 		}		
 
-		//return new ddnsResponse().add_info( 'vasya.root.', 'A', 1 );
+		//return new DNSResponse().add_info( 'vasya.root.', 'A', 1 );
 		return new Response( null, 404 );		
 	}
 };

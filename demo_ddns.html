@@ -7,6 +7,7 @@
 	<script language="javascript" src="response.js"></script>
 	<script language="javascript" src="agent.js"></script>
 	<script language="javascript" src="proto_dns.js"></script>
+	<script language="javascript" src="proto_ddns.js"></script>
 	<script language="javascript" src="proto_sha1hash.js"></script>
 	<script language="javascript" src="classes.js"></script>
 </head>
@@ -25,7 +26,7 @@
 	};
 
 	// Populate address space
-	address_map[1] = new Agent( 1, address_map, [ 2 ] );
+	var a1 = address_map[1] = new Agent( 1, address_map, [ 2 ] );
 	address_map[1].add_content( '<html>Including important message: ' +
 		'<iframe src="x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8">' );
 	address_map[1].dump();
@@ -38,11 +39,13 @@
 	address_map['DR2'] = new Agent( "DR2", address_map, [] );
 	address_map['DR2'].dump();
 
+	a1.proto_add( 'x-ddns' );
+
 	// Ordinary DNS
-	address_map[1].SHOW( "x-dns:vasya.tld.?class=IN&type=A");
-	address_map[1].SHOW( "x-dns:vasya.tld.");
-	address_map[1].SHOW( "x-dns:nonexisting.tld.");
-	address_map[1].SHOW( "x-dns:unreachable.other_tld.");
+	address_map[1].SHOW( "x-ddns:vasya.tld.?class=IN&type=A");
+	address_map[1].SHOW( "x-ddns:vasya.tld.");
+	address_map[1].SHOW( "x-ddns:nonexisting.tld.");
+	address_map[1].SHOW( "x-ddns:unreachable.other_tld.");
 
 	log( '--- Playing with 2' );
 	address_map[2].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8" );
