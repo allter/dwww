@@ -61,10 +61,21 @@ DNSResponse.prototype.add_source_id = function ( source_id )
 DNSResponse.prototype.add_info = function ( name, value, type, class, trust, derived_from_id )
 {
 	//                0     1      2
-	this.info.push( [ name, value, type, ( class || 'IN' ), ( trust || 0.8 ), ( derived_from_id || this.source_id ) ] );
+	this.info.push( [ name, value, type,
+	//  3                  4                 5
+		( class || 'IN' ), ( trust || 0.8 ), ( derived_from_id || this.source_id ) ] );
 	this.status = 200;
 	return this; // Allows chaining
 };
+
+// Accessors to this.info 'members'
+DNSResponse.prototype.i_name = function ( id ) { return this.info[ id ][ 0 ]; }
+DNSResponse.prototype.i_value = function ( id ) { return this.info[ id ][ 1 ]; }
+DNSResponse.prototype.i_type = function ( id ) { return this.info[ id ][ 2 ]; }
+DNSResponse.prototype.i_class = function ( id ) { return this.info[ id ][ 3 ]; }
+DNSResponse.prototype.i_trust = function ( id ) { return this.info[ id ][ 4 ]; }
+DNSResponse.prototype.i_derived_from_id = function ( id ) { return this.info[ id ][ 5 ]; }
+
 DNSResponse.prototype.get_value = function ( type, fqdn )
 {
 //log( "t" + type + "f" + fqdn );
@@ -95,8 +106,9 @@ DNSResponse.prototype.dump = function ()
 		res += ";;QUESTION:\n;" + this.query[2] + "\t" + this.query[1] + "\t" + this.query[0] + "\n";
 	for ( var i in this.info )
 	{
-		var i = this.info[ i ];
-		res += i[3] + "\t" + i[2] + "\t" + i[0] + "\t" + i[1] + "\n";
+		res += this.i_class( i ) + "\t" + this.i_type( i ) + "\t" + this.i_name( i ) + "\t" + this.i_value( i ) +
+			"; trust:" + this.i_trust( i ) + ", from:" + this.i_derived_from_id( i ) +
+			"\n";
 	}
 	return res;
 }
