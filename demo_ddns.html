@@ -1,0 +1,53 @@
+<html><!-- Demo with two agents -->
+<head>
+	<link rel="StyleSheet" href="styles.css" type="text/css">
+	<script language="javascript" src="jquery-1.2.6.js"></script>
+	<script language="javascript" src="sha1.js"></script>
+	<script language="javascript" src="demo_helpers.js"></script>
+	<script language="javascript" src="response.js"></script>
+	<script language="javascript" src="agent.js"></script>
+	<script language="javascript" src="proto_dns.js"></script>
+	<script language="javascript" src="proto_sha1hash.js"></script>
+	<script language="javascript" src="classes.js"></script>
+</head>
+<body>
+	<div id="sample" style="display: none">
+		<p class="a">src</p>
+	</div>
+	<div id="area">
+	</div>
+	<div id="log">
+	</div>
+	<script type="text/javascript"><!--
+
+	// Simulates abstract mapping from scalar address space to objects
+	var address_map = {
+	};
+
+	// Populate address space
+	address_map[1] = new Agent( 1, address_map, [ 2 ] );
+	address_map[1].add_content( '<html>Including important message: ' +
+		'<iframe src="x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8">' );
+	address_map[1].dump();
+	address_map[2] = new Agent( 2, address_map, [ 1 ] );
+	address_map[2].add_content( 'Hello, world' );
+	address_map[2].dump();
+
+	address_map['DR1'] = new Agent( "DR1", address_map, [] );
+	address_map['DR1'].dump();
+	address_map['DR2'] = new Agent( "DR2", address_map, [] );
+	address_map['DR2'].dump();
+
+	// Ordinary DNS
+	address_map[1].SHOW( "x-dns:vasya.tld.?class=IN&type=A");
+	address_map[1].SHOW( "x-dns:vasya.tld.");
+	address_map[1].SHOW( "x-dns:nonexisting.tld.");
+	address_map[1].SHOW( "x-dns:unreachable.other_tld.");
+
+	log( '--- Playing with 2' );
+	address_map[2].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8" );
+
+	//-->
+	</script>
+</body>
+</html>
