@@ -9,7 +9,13 @@ function Agent( id, address_map, neighbours )
 {
 	this.id = id;
 	this.address_map = address_map;
-	this.neighbours = neighbours;
+
+	this.neighbours = {};
+	for ( var i in neighbours )
+	{
+		this.neighbours[ neighbours[ i ] ] = {};
+	}
+
 	this.content = {};
 	this.protocols = {};
 	this.protocols[ 'x-sha1hash' ] = new Proto_sha1hash( this );
@@ -106,7 +112,7 @@ Agent.prototype = {
 	},
 	dump: function ()
 	{
-		this.log( 'dump: neighbours: ' + this.neighbours.join( ',' ) );
+		this.log( 'dump: neighbours: ' + keys( this.neighbours ).join( ',' ) );
 		this.log( 'dump: content: ' + keys( this.content ).join( ',' ) );
 	},
 	log_error: function( msg_html )

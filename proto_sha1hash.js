@@ -38,7 +38,7 @@ Proto_sha1hash.prototype = {
 
 		// Simply call all peers starting from ourselves until we receive correct_answer
 		var peers = [ this.agent.id ];
-		peers.push.apply( peers, this.agent.neighbours );
+		peers.push.apply( peers, keys( this.agent.neighbours ) );
 		for ( var i in peers )
 		{
 			var response = this.agent.make_protocol_request(
