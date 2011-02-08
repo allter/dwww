@@ -44,7 +44,20 @@ Agent.prototype = {
 		}
 	},
 	proto: function ( schema ) { return this.protocols[ schema ]; },
-	proto_add: function ( schema, proto ) { this.protocols[ schema ] = proto; },
+	proto_add: function ( schema, proto )
+	{
+		if ( ! proto )
+		{
+			var schema_parts = schema.split( 'x-' );
+			if ( ! schema_parts[1] ) throw 'Unsupported schema';
+			var proto_class_name = "Proto_" + schema_parts[1];
+			var proto_class = eval( proto_class_name );
+			var p = new proto_class( this );
+			proto = p;
+		}
+
+		this.protocols[ schema ] = proto;
+	},
 	SHOW: function ( url ) // Pseudo method callable by user, implements functionality of user-agent
 	{
 		this.log( "SHOW " + url );
