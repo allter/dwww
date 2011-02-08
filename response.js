@@ -42,10 +42,16 @@ Response.prototype = {
 
 function DNSResponse ()
 {
-	this.info = [];
+	this.info = []; // name, value, type, class, source_id, trust, derived_from_id
+	//this.query = []; // name, type, class
 }
 DNSResponse.prototype = new Response();
 DNSResponse.prototype.type = function () { return 'application/x-dns-response'; }
+DNSResponse.prototype.add_query = function ( name, type, class )
+{
+	this.query = [ name, type, ( class || 'IN' ) ];
+	return this; // Allows chaining
+};
 DNSResponse.prototype.add_info = function ( name, value, type, class, source_id, trust, derived_from_id )
 {
 	if ( source_id == null || source_id == undefined )
@@ -69,6 +75,13 @@ DNSResponse.prototype.get_value = function ( type, fqdn )
 		}
 	}
 	return null;
+};
+DNSResponse.prototype.get_resolved_value = function ()
+{
+	if ( ! this.query || ! this.query[0] || ! this.query[1] )
+		throw 'name and type must be set in query';
+
+	return this.get_value( this.query[1], this.query[0] );
 };
 DNSResponse.prototype.dump = function ()
 {

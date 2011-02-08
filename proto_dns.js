@@ -107,6 +107,7 @@ this.log_level && this.log( "query_local: type=" + type + ", fqdn=" + fqdn );
 		if ( !values || ! values.length ) return new Response( null, 404 );
 
 		var response = new DNSResponse();
+		response.add_query( fqdn, type, null );
 		for ( var i in values )
 		{
 this.log_level && this.log( "query_local: adding to response: " + "type=" + type + ", fqdn=" + fqdn + ", value=" + values[i][0] );
@@ -140,14 +141,14 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 			// load cur_zone NS from local cache
 			var res_cur_zone_ns = this.query_local( 'NS', cur_zone );
 			if ( res_cur_zone_ns.is_error() ) return new Response( null, 404 );
-//this.log( res_cur_zone_ns.is_error() + " " + cur_zone + " " + res_cur_zone_ns.get_value( 'NS', cur_zone ) + res_cur_zone_ns.dump() );
+//this.log( "is_error: " + res_cur_zone_ns.is_error() + " cur_zone: " + cur_zone + " value: " + res_cur_zone_ns.get_resolved_value( 'NS', cur_zone ) + res_cur_zone_ns.dump() );
 
 			// load cur_zone NS's A from local cache
-			var res_cur_zone_a = this.query_local( 'A', res_cur_zone_ns.get_value( 'NS', cur_zone ) );
+			var res_cur_zone_a = this.query_local( 'A', res_cur_zone_ns.get_resolved_value() );
 //this.log( res_cur_zone_a.is_error() + " " + res_cur_zone_a.dump() );
 //this.log( '-' );
 			if ( res_cur_zone_a.is_error() ) return new Response( null, 404 );
-			zone_server_addr = res_cur_zone_a.get_value( 'A', res_cur_zone_ns.get_value( 'NS', cur_zone ) );
+			zone_server_addr = res_cur_zone_a.get_resolved_value();
 //this.log( "zone_server_addr: " + zone_server_addr );
 
 //this.log( '--- i: ' + i );
@@ -161,9 +162,9 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 					return new Response( null, 404 );
 
 				// Load cur_dn zone NS's A record into local cache
-				var res_cur_dn_ns_a = this.query_local( 'A', res_cur_dn.get_value( 'NS', cur_dn ) );
+				var res_cur_dn_ns_a = this.query_local( 'A', res_cur_dn.get_resolved_value() );
 				if ( res_cur_dn_ns_a.is_error() )
-					res_cur_dn_ns_a = this.query_dns_server( 'A', res_cur_dn.get_value( 'NS', cur_dn ), zone_server_addr );
+					res_cur_dn_ns_a = this.query_dns_server( 'A', res_cur_dn.get_resolved_value(), zone_server_addr );
 				if ( res_cur_dn_ns_a.is_error() )
 					return new Response( null, 404 );
 			}
