@@ -8,8 +8,9 @@
 function Proto_ddns ( agent )
 {
 	this.agent = agent;
-	this.database = {}; // db.<type>.<fqdname>[ #record ].value|.trust
+	this.database = {}; // db.<type>.<fqdname>[ #record ][.value|.trust]
 //	this.authorities = {}; // auth.<id>[ #attr ]
+	this.cache = {}; // db.<id>.<type>.<fqdname>[ #record ][.value|.trust|.derived_from ]
 
 	this.log_level = 0;
 
@@ -59,6 +60,25 @@ Proto_ddns.prototype = {
 		{
 			var ri = response.info[ i ];
 			this.add_record( ri[2], ri[0], ri[1], null, peer_id );
+		}
+	},
+	update_cache: function ( response )
+	{
+		this.log( 'updating cache with response: : ' + response.dump() );
+		if ( ! this.cache[ response.source_id ] )
+			this.cache[ response.source_id ] = {};
+
+		for ( var i in response.info )
+		{
+			var ri = response.info[ i ];
+	
+			if ( ! this.cache[ response.source_id ][ response.i_type( i ) ] )
+				this.cache[ response.source_id ][ response.i_type( i ) ] = {};
+			if ( ! this.cache[ response.source_id ][ response.i_type( i ) ][ response.i_name( i ) ] )
+				this.cache[ response.source_id ][ response.i_type( i ) ][ response.i_name( i ) ] = [];
+			this.cache[ response.source_id ][ response.i_type( i ) ][ response.i_name( i ) ].push(
+				[ response.i_value( i ), response.i_trust( i ), response.i_derived_from_id( i ) ]
+			);
 		}
 	},
 	handle_request: function ( args )
@@ -123,6 +143,7 @@ this.log_level && this.log( "query_ddns_server: type=" + type + ", fqdn=" + dn +
 		if ( res.is_error() )
 			return new Response( null, 404 );
 		this.add_response( res, server );
+		this.update_cache( res );
 		return res;
 	},
 	query_dns_server: function ( type, dn, server )
@@ -132,6 +153,7 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 		if ( res.is_error() )
 			return new Response( null, 404 );
 		this.add_response( res, server );
+		this.update_cache( res );
 		return res;
 	},
 	query_ddns_recursive: function ( type, dn )
