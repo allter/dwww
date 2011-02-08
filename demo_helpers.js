@@ -30,3 +30,13 @@ function log( msg_html )
 	var log_element = $('#log');
 	log_element.append( ( msg_html || '' ) + "<br/>" );
 }
+
+err_code = {
+	forbidden: 403, // Forbidden
+	not_found: 404, // NXDOMAIN, etc
+
+	internal_error: 500, // Generic server error
+	not_implemented: 501, // Not implemented
+	bad_gw: 502, // Could not get answer from upstream
+	timeout: 504 // Timeout waiting for upstream
+};
