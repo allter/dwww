@@ -187,8 +187,10 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 						-> trust is (in my system) only a metric of closeness to 'good' majority, with 1.0 being the metric of ourselves
 		*/
 
-		// Find zone serving needed dn
 		var dn_parts = dn.split( '.' );
+
+/*
+		// Find zone serving needed dn
 		var l = dn_parts.length - 1;
 		for ( var i = 0; i <= l; i++ )
 		{
@@ -199,18 +201,21 @@ this.log( 'cur_dn=' + cur_dn );
 			// Find domain NSs
 			var res_peers_ns = this.query_peers( 'NS', cur_dn );
 			if ( res_peers_ns.is_error() ) continue; // What todo with 410/404 NXDOMAINS???
-
+*/
 			// If success:
 			// Get NS A/AAAAs
 			// Consult these
 			// Ascend to dn
 
-/*
+		var l = dn_parts.length - 1;
+		for ( var i = l - 1; i >= 0; i-- )
+		{
+
 			var cur_parts = dn_parts.slice( i, l );
 			var cur_dn = cur_parts.join( '.' ) + '.';
 			var zone_parts = dn_parts.slice( i + 1, l ); 
 			var cur_zone = zone_parts.join( '.' ) + '.';
-//this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
+this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
 
 			// load cur_zone NS from local cache
 			var res_cur_zone_ns = this.query_local( 'NS', cur_zone );
@@ -256,7 +261,7 @@ this.log( 'cur_dn=' + cur_dn );
 				// Return succesfull result
 				return res_cur_dn;
 			}
-*/
+
 		}		
 
 		//return new DNSResponse().add_info( 'vasya.root.', 'A', 1 );
