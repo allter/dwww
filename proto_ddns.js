@@ -12,7 +12,11 @@ function Proto_ddns ( agent )
 //	this.authorities = {}; // auth.<id>[ #attr ]
 	this.cache = {}; // db.<id>.<type>.<fqdname>[ #record ][.value|.trust|.derived_from ]
 
-	this.log_level = 0;
+	this.log_level = 1;
+
+	// 
+	this.peer_handlers = {};
+	this.peer_handlers[ 'dns' ] = [ ]; // TODO
 
 	// Default resolver settings
 	this.add_record( 'NS', '.', 'sim.root-servers.net.', 0.8 )
@@ -156,14 +160,43 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 		this.update_cache( res );
 		return res;
 	},
+	query_peers: function ( type, dn ) // Perform query of peers and update local db
+	{
+		return new Response( null, 404 );
+	},
 	query_ddns_recursive: function ( type, dn )
 	{
+		// First try to find direct record about dn
+		var res_query_peers = this.query_peers( type, dn );
+		if ( ! res_query_peers.is_error() )
+			return res_query_peers;
+
+		/*
+			- what to do with records that are presend only in default DNS (and thus, non-checkable by peers)?
+			- what to do with records that are absent in default DNS?
+				- we should go with it if trust is > 0.5
+					(what if not? how to deal with inherently untrusted p2p discovery?)
+		*/
+
+		// Find zone serving needed dn
 		var dn_parts = dn.split( '.' );
-//alert( dn_parts.toSource() );
-//this.log( dn_parts.length );
 		var l = dn_parts.length - 1;
-		for ( var i = l - 1; i >= 0; i-- )
+		for ( var i = 0; i <= l; i++ )
 		{
+			var cur_parts = dn_parts.slice( i, l );
+			var cur_dn = cur_parts.join( '.' ) + '.';
+this.log( 'cur_dn=' + cur_dn );
+
+			// Find domain NSs
+			var res_peers_ns = this.query_peers( 'NS', cur_dn );
+			if ( res_peers_ns.is_error() ) continue; // What todo with 410/404 NXDOMAINS???
+
+			// If success:
+			// Get NS A/AAAAs
+			// Consult these
+			// Ascend to dn
+
+/*
 			var cur_parts = dn_parts.slice( i, l );
 			var cur_dn = cur_parts.join( '.' ) + '.';
 			var zone_parts = dn_parts.slice( i + 1, l ); 
@@ -214,6 +247,7 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 				// Return succesfull result
 				return res_cur_dn;
 			}
+*/
 		}		
 
 		//return new DNSResponse().add_info( 'vasya.root.', 'A', 1 );
