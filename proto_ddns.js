@@ -172,10 +172,19 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 			return res_query_peers;
 
 		/*
-			- what to do with records that are presend only in default DNS (and thus, non-checkable by peers)?
-			- what to do with records that are absent in default DNS?
+			- we need to descend to root _always_ because spoofer can make fake subrecord (with lower trust)
+				- maybe we should request data for all superdomains simultaneously and then add results
+					to temporary local resolve DB?
+			- what to do with records that are present only in default DNS
+				(and thus, non-checkable by peers)?
+					-> if they are the only, trust them. otherwise someone should have a copy derived from them
+			- what to do with records that are absent in the default DNS?
+					-> someone should have record in the delegation tree,
+						that is NXDOMAIN in the default DNS, but something different in someone's
+						with trust value greater than NXDOMAIN's
 				- we should go with it if trust is > 0.5
 					(what if not? how to deal with inherently untrusted p2p discovery?)
+						-> trust is (in my system) only a metric of closeness to 'good' majority, with 1.0 being the metric of ourselves
 		*/
 
 		// Find zone serving needed dn
