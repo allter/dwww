@@ -197,7 +197,13 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 	},
 	query_peers: function ( type, dn ) // Perform query of peers and update local db
 	{
-		return new Response( null, 404 );
+	},
+	query_dns_server_and_peers: function ( type, dn, server )
+	{
+		var dns_res = this.query_dns_server( type, dn, server );
+		
+		return this.query_local( type, dn );
+		//return new Response( null, 404 );
 	},
 	query_ddns_recursive: function ( type, dn )
 	{
@@ -278,14 +284,14 @@ this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
 				// Load cur_dn zone NS record into local cache
 				var res_cur_dn = this.query_local( 'NS', cur_dn );
 				if ( res_cur_dn.is_error() )
-					res_cur_dn = this.query_dns_server( 'NS', cur_dn, zone_server_addr );
+					res_cur_dn = this.query_dns_server_and_peers( 'NS', cur_dn, zone_server_addr );
 				if ( res_cur_dn.is_error() )
 					return new Response( null, 404 );
 
 				// Load cur_dn zone NS's A record into local cache
 				var res_cur_dn_ns_a = this.query_local( 'A', res_cur_dn.get_resolved_value() );
 				if ( res_cur_dn_ns_a.is_error() )
-					res_cur_dn_ns_a = this.query_dns_server( 'A', res_cur_dn.get_resolved_value(), zone_server_addr );
+					res_cur_dn_ns_a = this.query_dns_server_and_peers( 'A', res_cur_dn.get_resolved_value(), zone_server_addr );
 				if ( res_cur_dn_ns_a.is_error() )
 					return new Response( null, 404 );
 			}
@@ -295,7 +301,7 @@ this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
 				var res_cur_dn = this.query_local( type, cur_dn );
 //this.log( '---: ' + res_cur_dn.dump() );
 				if ( res_cur_dn.is_error() )
-					res_cur_dn = this.query_dns_server( type, cur_dn, zone_server_addr );
+					res_cur_dn = this.query_dns_server_and_peers( type, cur_dn, zone_server_addr );
 //this.log( '---: ' + res_cur_dn.dump() );
 				if ( res_cur_dn.is_error() )
 					return new Response( null, 404 );
