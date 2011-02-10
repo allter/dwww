@@ -88,7 +88,7 @@ Proto_ddns.prototype = {
 				this.database[ type ][ fqdn ] = [ record ];
 		}
 	},
-	add_response: function ( response, peer_id )
+	add_response: function ( response )
 	{
 		this.log( 'adding record: ' + response.dump() );
 		for ( var i in response.info )
@@ -182,7 +182,7 @@ this.log_level && this.log( "query_ddns_server: type=" + type + ", fqdn=" + dn +
 		var res = this.agent.make_protocol_request( server, 'x-dns', { type: type, fqdn: dn } );
 		if ( res.is_error() )
 			return new Response( null, 404 );
-		this.add_response( res, server );
+		this.add_response( res );
 		this.update_cache( res );
 		return res;
 	},
@@ -192,7 +192,7 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 		var res = this.agent.make_protocol_request( server, 'x-dns', { type: type, fqdn: dn } );
 		if ( res.is_error() )
 			return new Response( null, 404 );
-		this.add_response( res, server );
+		this.add_response( res );
 		this.update_cache( res );
 		return res;
 	},

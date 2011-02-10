@@ -52,13 +52,19 @@ Proto_dns.prototype = {
 			this.database[ type ][ fqdn ] = [];
 		this.database[ type ][ fqdn ].push( [ value, ( trust || 1 ), ( agent_id || this.agent.id ) ] );
 	},
-	add_response: function ( response, peer_id )
+	add_response: function ( response )
 	{
 		this.log( 'adding record: ' + response.dump() );
 		for ( var i in response.info )
 		{
 			var ri = response.info[ i ];
-			this.add_record( ri[2], ri[0], ri[1], null, peer_id );
+			this.add_record(
+				response.i_type( i ),
+				response.i_name( i ),
+				response.i_value( i ),
+				null,
+				response.source_id
+			);
 		}
 	},
 	handle_request: function ( args )
@@ -122,7 +128,7 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 		var res = this.agent.make_protocol_request( server, this.schema, { type: type, fqdn: dn } );
 		if ( res.is_error() )
 			return new Response( null, 404 );
-		this.add_response( res, server );
+		this.add_response( res );
 		return res;
 	},
 	query_dns_recursive: function ( type, dn )

@@ -48,11 +48,16 @@ function DNSResponse ()
 }
 DNSResponse.prototype = new Response();
 DNSResponse.prototype.type = function () { return 'application/x-dns-response'; }
+
 DNSResponse.prototype.add_query = function ( name, type, class )
 {
 	this.query = [ name, type, ( class || 'IN' ) ];
 	return this; // Allows chaining
 };
+DNSResponse.prototype.q_type = function ( ) { return this.query[ 1 ]; }
+DNSResponse.prototype.q_name = function ( ) { return this.query[ 0 ]; }
+DNSResponse.prototype.q_class = function ( ) { return this.query[ 2 ]; }
+
 DNSResponse.prototype.add_source_id = function ( source_id )
 {
 	this.source_id = source_id;
@@ -63,7 +68,7 @@ DNSResponse.prototype.add_info = function ( name, value, type, class, trust, der
 	//                0     1      2
 	this.info.push( [ name, value, type,
 	//  3                  4                 5
-		( class || 'IN' ), ( trust || 0.8 ), ( derived_from_id || this.source_id ) ] );
+		( class || 'IN' ), ( trust || 1 ), ( derived_from_id || this.source_id ) ] );
 	this.status = 200;
 	return this; // Allows chaining
 };
@@ -82,11 +87,10 @@ DNSResponse.prototype.get_value = function ( type, fqdn )
 	for ( var i in this.info )
 	{
 //log( "<<<" + this.info[i][1] );
-		if ( type == this.info[ i ][ 2 ]
-			&& fqdn == this.info[ i ][ 0 ] )
+		if ( type == this.i_type( i ) && fqdn == this.i_name( i ) )
 		{
 //log( "---" );
-			return this.info[ i ][ 1 ];
+			return this.i_value( i );
 		}
 	}
 	return null;
@@ -97,6 +101,24 @@ DNSResponse.prototype.get_resolved_value = function ()
 		throw 'name and type must be set in query';
 
 	return this.get_value( this.query[1], this.query[0] );
+};
+DNSResponse.prototype.get_resolved_trust = function ( trust )
+{
+	trust = trust || 1;
+	if ( ! this.query || ! this.query[0] || ! this.query[1] )
+		throw 'name and type must be set in query';
+
+	for ( var i in this.info )
+	{
+//log( "<<<" + this.info[i][1] );
+		if ( this.q_type() == this.i_type( i ) && this.q_name() == this.i_name( i ) )
+		{
+//log( "---" );
+			var t = this.i_trust( i );
+			return t > trust ? trust : t;
+		}
+	}
+	return null;
 };
 DNSResponse.prototype.dump = function ()
 {
