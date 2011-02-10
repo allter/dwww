@@ -12,7 +12,7 @@ function Proto_ddns ( agent )
 //	this.authorities = {}; // auth.<id>[ #attr ]
 	this.cache = {}; // db.<id>.<type>.<fqdname>[ #record ][.value|.trust|.derived_from ]
 
-	this.log_level = 1;
+	this.log_level = 0;
 
 	// 
 	this.peer_handlers = {};
@@ -93,7 +93,7 @@ Proto_ddns.prototype = {
 	add_response: function ( response, base_trust )
 	{
 		base_trust = base_trust || 1;
-		this.log( 'add_response: base_trust=' + base_trust + ', response=' + response.dump() );
+		this.log_level && this.log( 'add_response: base_trust=' + base_trust + ', response=' + response.dump() );
 		for ( var i in response.info )
 		{
 			this.add_record(
@@ -287,16 +287,16 @@ this.log( 'cur_dn=' + cur_dn );
 			var cur_dn = cur_parts.join( '.' ) + '.';
 			var zone_parts = dn_parts.slice( i + 1, l ); 
 			var cur_zone = zone_parts.join( '.' ) + '.';
-this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
+//this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
 
 			// load cur_zone NS from local cache
 			var res_cur_zone_ns = this.query_local( 'NS', cur_zone );
 			if ( res_cur_zone_ns.is_error() ) return new Response( null, 404 ); // TODO in ddns better continue;
 			var result_trust = res_cur_zone_ns.get_resolved_trust();
-this.log( res_cur_zone_ns.is_error() + ", cur_zone=" +
-	cur_zone + ", value=" + res_cur_zone_ns.get_resolved_value() +
-	", trust=" + result_trust +
-	", dump=" + res_cur_zone_ns.dump() );
+//this.log( res_cur_zone_ns.is_error() + ", cur_zone=" +
+//	cur_zone + ", value=" + res_cur_zone_ns.get_resolved_value() +
+//	", trust=" + result_trust +
+//	", dump=" + res_cur_zone_ns.dump() );
 
 			// load cur_zone NS's A from local cache
 			var res_cur_zone_a = this.query_local( 'A', res_cur_zone_ns.get_resolved_value() );
@@ -305,7 +305,7 @@ this.log( res_cur_zone_ns.is_error() + ", cur_zone=" +
 			if ( res_cur_zone_a.is_error() ) return new Response( null, 404 ); // TODO in ddns better continue;
 			result_trust = res_cur_zone_a.get_resolved_trust( result_trust );
 			zone_server_addr = res_cur_zone_a.get_resolved_value();
-this.log( "zone_server_addr: " + zone_server_addr + ", result_trust: " + result_trust );
+//this.log( "zone_server_addr: " + zone_server_addr + ", result_trust: " + result_trust );
 
 //this.log( '--- i: ' + i );
 			if ( i != 0 )
