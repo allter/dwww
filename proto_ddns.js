@@ -40,6 +40,7 @@ function Proto_ddns ( agent )
 }
 Proto_ddns.prototype = {
 	schema: 'x-ddns',
+	dns_schema: 'x-dns',
 /*	add_auth: function ( id )
 	{
 		this.authorities[ id ] = {};
@@ -197,11 +198,25 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 	},
 	query_peers: function ( type, dn ) // Perform query of peers and update local db
 	{
+		// Simply call all peers starting from ourselves until we receive correct_answer
+		var peers = keys( this.agent.neighbours ) || [];
+		for ( var i in peers )
+		{
+			var response = this.agent.make_protocol_request(
+				peers[i],
+				this.dns_schema,
+				{ type: type, fqdn: dn }
+			);
+			if ( response.is_error() ) continue;
+			this.add_response( response );
+			this.update_cache( response );
+		}
+		// Not returning anyithing check with query_local
 	},
 	query_dns_server_and_peers: function ( type, dn, server )
 	{
 		var dns_res = this.query_dns_server( type, dn, server );
-		
+		this.query_peers( type, dn );
 		return this.query_local( type, dn );
 		//return new Response( null, 404 );
 	},
