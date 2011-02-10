@@ -22,6 +22,7 @@ function Proto_ddns ( agent )
 	this.add_record( 'NS', '.', 'sim.root-servers.net.', 0.8 )
 	this.add_record( 'A', 'sim.root-servers.net.', 'DR1', 0.8 )
 
+/*
 	// Authority resolver settings for . holder
 	if ( agent.id == 'DR1' )
 	{
@@ -37,6 +38,7 @@ function Proto_ddns ( agent )
 		this.add_record( 'A', 'vasya2.tld.', '2', 1 );
 		this.add_record( 'URI', 'vasya3.tld.', 'x-direct://vasya.tld./index.txt', 1 );
 	}
+*/
 }
 Proto_ddns.prototype = {
 	schema: 'x-ddns',
@@ -88,23 +90,24 @@ Proto_ddns.prototype = {
 				this.database[ type ][ fqdn ] = [ record ];
 		}
 	},
-	add_response: function ( response )
+	add_response: function ( response, base_trust )
 	{
-		this.log( 'adding record: ' + response.dump() );
+		base_trust = base_trust || 1;
+		this.log( 'add_response: base_trust=' + base_trust + ', response=' + response.dump() );
 		for ( var i in response.info )
 		{
 			this.add_record(
 				response.i_type( i ),
 				response.i_name( i ),
 				response.i_value( i ),
-				null,
+				( ( response.i_trust( i ) > base_trust ) ?  base_trust : response.i_trust( i ) ),
 				response.source_id
 			);
 		}
 	},
 	update_cache: function ( response )
 	{
-		this.log( 'updating cache with response: : ' + response.dump() );
+//		this.log( 'updating cache with response: : ' + response.dump() );
 		if ( ! this.cache[ response.source_id ] )
 			this.cache[ response.source_id ] = {};
 
@@ -171,11 +174,14 @@ this.log_level && this.log( "query_local: type=" + type + ", fqdn=" + fqdn );
 		response.add_source_id( this.agent.id );
 		for ( var i in values )
 		{
-this.log_level && this.log( "query_local: adding to response: " + "type=" + type + ", fqdn=" + fqdn + ", value=" + values[i][0] );
-			response.add_info( fqdn, values[i][0], type, null );
+this.log_level && this.log( "query_local: adding to response: " + "type=" + type + ", fqdn=" + fqdn + ", value=" + values[i][0] +
+	", trust=" + values[i][1] + ", derived_from_id=" + values[i][2]
+);
+			response.add_info( fqdn, values[i][0], type, null, values[i][1], values[i][2] );
 		}
 		return response;
 	},
+	/*
 	query_ddns_server: function ( type, dn, server )
 	{
 this.log_level && this.log( "query_ddns_server: type=" + type + ", fqdn=" + dn + ", srv=" + server );
@@ -186,18 +192,20 @@ this.log_level && this.log( "query_ddns_server: type=" + type + ", fqdn=" + dn +
 		this.update_cache( res );
 		return res;
 	},
-	query_dns_server: function ( type, dn, server )
+	*/
+	query_dns_server: function ( type, dn, server, base_trust )
 	{
 this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + ", srv=" + server );
 		var res = this.agent.make_protocol_request( server, 'x-dns', { type: type, fqdn: dn } );
 		if ( res.is_error() )
 			return new Response( null, 404 );
-		this.add_response( res );
+		this.add_response( res, base_trust );
 		this.update_cache( res );
 		return res;
 	},
-	query_peers: function ( type, dn ) // Perform query of peers and update local db
+	query_peers: function ( type, dn, base_trust ) // Perform query of peers and update local db
 	{
+		base_trust = base_trust || 1;
 		// Simply call all peers starting from ourselves until we receive correct_answer
 		var peers = keys( this.agent.neighbours ) || [];
 		for ( var i in peers )
@@ -208,15 +216,16 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 				{ type: type, fqdn: dn }
 			);
 			if ( response.is_error() ) continue;
-			this.add_response( response );
+			this.add_response( response, 1 ); // TODO: use individual peers' trust modifiers
 			this.update_cache( response );
 		}
 		// Not returning anyithing check with query_local
 	},
-	query_dns_server_and_peers: function ( type, dn, server )
+	query_dns_server_and_peers: function ( type, dn, server, base_trust )
 	{
-		var dns_res = this.query_dns_server( type, dn, server );
-		this.query_peers( type, dn );
+		base_trust = base_trust || 1;
+		var dns_res = this.query_dns_server( type, dn, server, base_trust );
+		this.query_peers( type, dn, base_trust );
 		return this.query_local( type, dn );
 		//return new Response( null, 404 );
 	},
@@ -283,15 +292,20 @@ this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
 			// load cur_zone NS from local cache
 			var res_cur_zone_ns = this.query_local( 'NS', cur_zone );
 			if ( res_cur_zone_ns.is_error() ) return new Response( null, 404 ); // TODO in ddns better continue;
-//this.log( res_cur_zone_ns.is_error() + " " + cur_zone + " " + res_cur_zone_ns.get_resolved_value() + res_cur_zone_ns.dump() );
+			var result_trust = res_cur_zone_ns.get_resolved_trust();
+this.log( res_cur_zone_ns.is_error() + ", cur_zone=" +
+	cur_zone + ", value=" + res_cur_zone_ns.get_resolved_value() +
+	", trust=" + result_trust +
+	", dump=" + res_cur_zone_ns.dump() );
 
 			// load cur_zone NS's A from local cache
 			var res_cur_zone_a = this.query_local( 'A', res_cur_zone_ns.get_resolved_value() );
 //this.log( res_cur_zone_a.is_error() + " " + res_cur_zone_a.dump() );
 //this.log( '-' );
 			if ( res_cur_zone_a.is_error() ) return new Response( null, 404 ); // TODO in ddns better continue;
+			result_trust = res_cur_zone_a.get_resolved_trust( result_trust );
 			zone_server_addr = res_cur_zone_a.get_resolved_value();
-//this.log( "zone_server_addr: " + zone_server_addr );
+this.log( "zone_server_addr: " + zone_server_addr + ", result_trust: " + result_trust );
 
 //this.log( '--- i: ' + i );
 			if ( i != 0 )
@@ -299,14 +313,15 @@ this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
 				// Load cur_dn zone NS record into local cache
 				var res_cur_dn = this.query_local( 'NS', cur_dn );
 				if ( res_cur_dn.is_error() )
-					res_cur_dn = this.query_dns_server_and_peers( 'NS', cur_dn, zone_server_addr );
+					res_cur_dn = this.query_dns_server_and_peers( 'NS', cur_dn, zone_server_addr, result_trust );
 				if ( res_cur_dn.is_error() )
 					return new Response( null, 404 );
+				result_trust = res_cur_dn.get_resolved_trust( result_trust );
 
 				// Load cur_dn zone NS's A record into local cache
 				var res_cur_dn_ns_a = this.query_local( 'A', res_cur_dn.get_resolved_value() );
 				if ( res_cur_dn_ns_a.is_error() )
-					res_cur_dn_ns_a = this.query_dns_server_and_peers( 'A', res_cur_dn.get_resolved_value(), zone_server_addr );
+					res_cur_dn_ns_a = this.query_dns_server_and_peers( 'A', res_cur_dn.get_resolved_value(), zone_server_addr, result_trust );
 				if ( res_cur_dn_ns_a.is_error() )
 					return new Response( null, 404 );
 			}
@@ -316,7 +331,7 @@ this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
 				var res_cur_dn = this.query_local( type, cur_dn );
 //this.log( '---: ' + res_cur_dn.dump() );
 				if ( res_cur_dn.is_error() )
-					res_cur_dn = this.query_dns_server_and_peers( type, cur_dn, zone_server_addr );
+					res_cur_dn = this.query_dns_server_and_peers( type, cur_dn, zone_server_addr, result_trust );
 //this.log( '---: ' + res_cur_dn.dump() );
 				if ( res_cur_dn.is_error() )
 					return new Response( null, 404 );

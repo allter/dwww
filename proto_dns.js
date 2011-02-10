@@ -22,6 +22,8 @@ function Proto_dns ( agent )
 	{
 		this.add_record( 'NS', 'tld.', 'ns.tld.', 1 );
 		this.add_record( 'A', 'ns.tld.', 'DR2', 1 );
+		this.add_record( 'NS', 'censored.', 'ns.tld.', 1 );
+		this.add_record( 'A', 'ns.censored.', 'DR2', 1 );
 	}
 
 	// Authority resolver settings for .tld holder
@@ -118,7 +120,7 @@ this.log_level && this.log( "query_local: type=" + type + ", fqdn=" + fqdn );
 		for ( var i in values )
 		{
 this.log_level && this.log( "query_local: adding to response: " + "type=" + type + ", fqdn=" + fqdn + ", value=" + values[i][0] );
-			response.add_info( fqdn, values[i][0], type, null );
+			response.add_info( fqdn, values[i][0], type, null, values[i][1], values[i][2] );
 		}
 		return response;
 	},

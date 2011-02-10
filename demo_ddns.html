@@ -30,8 +30,10 @@
 	address_map[1].add_content( '<html>Including important message: ' +
 		'<iframe src="x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8">' );
 	address_map[1].dump();
-	address_map[2] = new Agent( 2, address_map, [ 1 ] );
+	var friend = address_map[2] = new Agent( 2, address_map, [ 1 ] );
 	address_map[2].add_content( 'Hello, world' );
+	friend.proto( 'x-dns').add_record( 'NS', 'censored.', 'ns.censored.', 1 );
+	friend.proto( 'x-dns').add_record( 'A', 'ns.censored.', 'CNS', 1 );
 	address_map[2].dump();
 
 	address_map['DR1'] = new Agent( "DR1", address_map, [] );
@@ -39,13 +41,24 @@
 	address_map['DR2'] = new Agent( "DR2", address_map, [] );
 	address_map['DR2'].dump();
 
+	var censored_ns = address_map['CNS'] = new Agent( "CNS", address_map, [] );
+	censored_ns.proto( 'x-dns' ).add_record( 'A', 'host.censored.', 'CA', 1 );
+	censored_ns.dump();
+	//var censored_host = address_map['CA'] = new Agent( "CA", address_map, [] );
+	//censored_host.dump();
+
 	a1.proto_add( 'x-ddns' );
 
 	// Ordinary DNS
+/*
 	address_map[1].SHOW( "x-ddns:vasya.tld.?class=IN&type=A");
 	address_map[1].SHOW( "x-ddns:vasya.tld.");
 	address_map[1].SHOW( "x-ddns:nonexisting.tld.");
 	address_map[1].SHOW( "x-ddns:unreachable.other_tld.");
+*/
+
+	// DDNS features
+	a1.SHOW( "x-ddns:host.censored." );
 
 	log( '--- Playing with 2' );
 	address_map[2].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8" );

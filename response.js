@@ -102,9 +102,9 @@ DNSResponse.prototype.get_resolved_value = function ()
 
 	return this.get_value( this.query[1], this.query[0] );
 };
-DNSResponse.prototype.get_resolved_trust = function ( trust )
+DNSResponse.prototype.get_resolved_trust = function ( base_trust )
 {
-	trust = trust || 1;
+	base_trust = base_trust || 1;
 	if ( ! this.query || ! this.query[0] || ! this.query[1] )
 		throw 'name and type must be set in query';
 
@@ -115,10 +115,10 @@ DNSResponse.prototype.get_resolved_trust = function ( trust )
 		{
 //log( "---" );
 			var t = this.i_trust( i );
-			return t > trust ? trust : t;
+			return ( ( t > base_trust ) ? base_trust : t );
 		}
 	}
-	return null;
+	return 0;
 };
 DNSResponse.prototype.dump = function ()
 {
