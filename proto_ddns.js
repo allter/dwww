@@ -51,6 +51,7 @@ Proto_ddns.prototype = {
 	},
 	add_record: function ( type, fqdn, value, trust, agent_id )
 	{
+		// Low-level insertion of DNS record into local database
 		trust = trust || 1;
 		if ( ! this.database[ type ] )
 			this.database[ type ] = {};
@@ -71,7 +72,7 @@ Proto_ddns.prototype = {
 			// Check if current trust allows insertion or replacement
 			var record_trust_is_bigger = false;
 			var record_trust_is_equal = true;
-			for ( i in old_records )
+			for ( var i in old_records )
 			{
 				if ( trust > old_records[i][1] )
 					record_trust_is_bigger = true;
