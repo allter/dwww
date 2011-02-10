@@ -10,6 +10,7 @@
 	<script language="javascript" src="proto_dns.js"></script>
 	<script language="javascript" src="proto_direct.js"></script>
 	<script language="javascript" src="proto_sha1hash.js"></script>
+	<script language="javascript" src="proto_ddns.js"></script>
 	<script language="javascript" src="proto_dwww.js"></script>
 	<script language="javascript" src="classes.js"></script>
 </head>
@@ -39,6 +40,7 @@
 	//vasya2.proto_add( 'x-direct', new Proto_direct( vasya2 ) );
 	//vasya2.proto( 'x-direct' ).add_document( '/', 'Second hello from Vasya!!' );
 	address_map[2].dump();
+	var friend = vasya2;
 
 	var vasya = address_map[3] = new Agent( 3, address_map, [] );
 	vasya.proto_add( 'x-direct', new Proto_direct( vasya ) );
@@ -51,6 +53,18 @@
 	tld_zone_server.proto( 'x-dns' ).add_record( 'URI', 'vasya.tld.', 'x-sha1hash:a34bad256859ebdeda3608a0726544d5d00730d9' );
 	address_map['DR2'].dump();	
 
+	// Set-up to show censorship overriding using friends' x-ddns metadata
+	var censored_ns = address_map['CNS'] = new Agent( "CNS", address_map, [] );
+	censored_ns.proto( 'x-dns' ).add_record( 'A', 'host.censored.', '999', 1 );
+	//censored_ns.proto( 'x-dns' ).add_record( 'URI', 'data.censored.', '', 1 );
+	censored_ns.dump();
+	var censored_host = address_map['999'] = new Agent( "999", address_map, [] );
+	censored_host.proto_add( 'x-direct' );
+	censored_host.proto( 'x-direct' ).add_document( '/', 'This is censored data from censored host.' );
+	censored_host.dump();
+	friend.proto( 'x-dns').add_record( 'NS', 'censored.', 'ns.censored.', 1 );
+	friend.proto( 'x-dns').add_record( 'A', 'ns.censored.', 'CNS', 1 );
+
 	//address_map[1].SHOW( "x-dns:vasya.tld.?class=IN&type=A");
 	a1.SHOW( "x-dwww://vasya.tld.");
 	a1.SHOW( "x-dwww://vasya2.tld.");
@@ -58,6 +72,9 @@
 	//a1.SHOW( "x-dwww://vasya3.tld.");
 	a1.SHOW( "x-direct://3/index.txt");
 	a1.SHOW( "x-direct://vasya.tld./index.txt");
+
+	// Show censored data
+	a1.SHOW( "x-dwww://host.censored." );
 
 	log( '--- Playing with 2' );
 	address_map[2].SHOW( "x-sha1hash:e02aa1b106d5c7c6a98def2b13005d5b84fd8dc8" );

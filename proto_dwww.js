@@ -8,9 +8,17 @@
 function Proto_dwww( agent )
 {
 	this.agent = agent;
+
+	// dwww uses ddns, so add its protocol handler
+	if ( ! this.agent.proto( 'x-ddns' ) )
+	{
+		this.agent.proto_add( 'x-ddns' );
+	}
 }
 Proto_dwww.prototype = {
 	schema: 'x-dwww',
+	dns_schema: 'x-ddns',
+	//dns_schema: 'x-dns',
 	query_WWW: function ( method, url, args )
 	{
 		var uri = new URI( url );
@@ -29,7 +37,8 @@ Proto_dwww.prototype = {
 	  {
 
 		// Find URI to content
-		var res_dns = this.agent.query_WWW( 'GET', 'x-dns:' + uri.authority + "?type=URI" );
+//this.agent.log( this.schema + ':  searching for URI record' );
+		var res_dns = this.agent.query_WWW( 'GET', this.dns_schema + ':' + uri.authority + "?type=URI" );
 		if ( res_dns.is_ok() )
 		{
 			var uri = res_dns.get_value( 'URI', uri.authority );
@@ -41,10 +50,18 @@ Proto_dwww.prototype = {
 		}
 
 		// Check if address has simple addresses for x-direct
-		res_dns = this.agent.query_WWW( 'GET', 'x-dns:' + uri.authority );
+//this.agent.log( this.schema + ': searching for A record' );
+		res_dns = this.agent.query_WWW( 'GET', this.dns_schema + ':' + uri.authority );
+//this.agent.log( '---: ' + this.dns_schema + ':' + uri.authority );
 		if ( res_dns.is_ok() )
 		{
-			var x_direct_url = url.replace( /^x-dwww:/, 'x-direct:' );
+//this.agent.log( this.schema + ': found A record: ' + res_dns.get_resolved_value() );
+			var regexp = new RegExp( '^x-dwww://' + uri.authority );
+//throw regexp + ' ' + 'x-direct:' + res_dns.get_resolved_value()
+//this.agent.log( "regexp " + regexp + ", x-direct url prefix: " + 'x-direct://' + res_dns.get_resolved_value() );
+			var x_direct_url = url.replace( regexp, 'x-direct://' + res_dns.get_resolved_value() );
+//this.agent.log( this.schema + ': redirecting to x-direct url: ' + x_direct_url );
+//throw 'AAA';
 			return this.agent.query_WWW( method, x_direct_url );
 		}
 	  }
