@@ -62,8 +62,13 @@ Proto_ddns.prototype = {
 		this.log( 'adding record: ' + response.dump() );
 		for ( var i in response.info )
 		{
-			var ri = response.info[ i ];
-			this.add_record( ri[2], ri[0], ri[1], null, peer_id );
+			this.add_record(
+				response.i_type( i ),
+				response.i_name( i ),
+				response.i_value( i ),
+				null,
+				response.source_id
+			);
 		}
 	},
 	update_cache: function ( response )
