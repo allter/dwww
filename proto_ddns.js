@@ -51,11 +51,40 @@ Proto_ddns.prototype = {
 	},
 	add_record: function ( type, fqdn, value, trust, agent_id )
 	{
+		trust = trust || 1;
 		if ( ! this.database[ type ] )
 			this.database[ type ] = {};
 		if ( ! this.database[ type ][ fqdn ] )
 			this.database[ type ][ fqdn ] = [];
-		this.database[ type ][ fqdn ].push( [ value, ( trust || 1 ), ( agent_id || this.agent.id ) ] );
+		var old_records = this.database[ type ][ fqdn ];
+
+		// Prepare record to add or replace
+		var record = [ value, trust, ( agent_id || this.agent.id ) ];
+
+		// Insert or replace record
+		if ( old_records.length == 0 )
+		{
+			old_records.push( record );
+		}
+		else
+		{
+			// Check if current trust allows insertion or replacement
+			var record_trust_is_bigger = false;
+			var record_trust_is_equal = true;
+			for ( i in old_records )
+			{
+				if ( trust > old_records[i][1] )
+					record_trust_is_bigger = true;
+				if ( trust != old_records[i][1] )
+					record_trust_is_equal = false;
+			}
+
+			// Actually insert or replace previous
+			if ( record_trust_is_equal )
+				old_records.push( record );
+			if ( record_trust_is_bigger )
+				this.database[ type ][ fqdn ] = [ record ];
+		}
 	},
 	add_response: function ( response, peer_id )
 	{
@@ -187,6 +216,8 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 			- what to do with records that are present only in default DNS
 				(and thus, non-checkable by peers)?
 					-> if they are the only, trust them. otherwise someone should have a copy derived from them
+			- what to do with records for the same fqdn-type but with differrent trust?
+				-> currently we just replace lower-trust record with higher-trust
 			- what to do with records that are absent in the default DNS?
 					-> someone should have record in the delegation tree,
 						that is NXDOMAIN in the default DNS, but something different in someone's
