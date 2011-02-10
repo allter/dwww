@@ -177,16 +177,19 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 			- we need to descend to root _always_ because spoofer can make fake subrecord (with lower trust)
 				- maybe we should request data for all superdomains simultaneously and then add results
 					to temporary local resolve DB?
+				- it is possible to find as much delegation paths from root as possible, for systems with
+					different trust degradation
 			- what to do with records that are present only in default DNS
 				(and thus, non-checkable by peers)?
 					-> if they are the only, trust them. otherwise someone should have a copy derived from them
 			- what to do with records that are absent in the default DNS?
 					-> someone should have record in the delegation tree,
 						that is NXDOMAIN in the default DNS, but something different in someone's
-						with trust value greater than NXDOMAIN's
+						with trust value greater than NXDOMAIN's, then we use it
 				- we should go with it if trust is > 0.5
 					(what if not? how to deal with inherently untrusted p2p discovery?)
 						-> trust is (in my system) only a metric of closeness to 'good' majority, with 1.0 being the metric of ourselves
+							- it is possible that instead of trust we should use: 0 <= 'distrust' < infinity
 		*/
 
 		var dn_parts = dn.split( '.' );
@@ -221,14 +224,14 @@ this.log( i + ": cur_dn: " + cur_dn + " , cur_zone: " + cur_zone );
 
 			// load cur_zone NS from local cache
 			var res_cur_zone_ns = this.query_local( 'NS', cur_zone );
-			if ( res_cur_zone_ns.is_error() ) return new Response( null, 404 );
+			if ( res_cur_zone_ns.is_error() ) return new Response( null, 404 ); // TODO in ddns better continue;
 //this.log( res_cur_zone_ns.is_error() + " " + cur_zone + " " + res_cur_zone_ns.get_resolved_value() + res_cur_zone_ns.dump() );
 
 			// load cur_zone NS's A from local cache
 			var res_cur_zone_a = this.query_local( 'A', res_cur_zone_ns.get_resolved_value() );
 //this.log( res_cur_zone_a.is_error() + " " + res_cur_zone_a.dump() );
 //this.log( '-' );
-			if ( res_cur_zone_a.is_error() ) return new Response( null, 404 );
+			if ( res_cur_zone_a.is_error() ) return new Response( null, 404 ); // TODO in ddns better continue;
 			zone_server_addr = res_cur_zone_a.get_resolved_value();
 //this.log( "zone_server_addr: " + zone_server_addr );
 
