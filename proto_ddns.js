@@ -336,6 +336,9 @@ this.log( 'cur_dn=' + cur_dn );
 				if ( res_cur_dn.is_error() )
 					return new Response( null, 404 );
 
+				// Make local request to use final local trust value for this record
+				res_cur_dn = this.query_local( type, cur_dn );
+
 				// Return succesfull result
 				return res_cur_dn;
 			}
