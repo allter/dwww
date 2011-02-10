@@ -13,9 +13,9 @@ function Proto_dns ( agent )
 
 	this.log_level = 0;
 
-	// Default resolver settings
-	this.add_record( 'NS', '.', 'sim.root-servers.net.', 0.8 )
-	this.add_record( 'A', 'sim.root-servers.net.', 'DR1', 0.8 )
+	// Default resolver settings; for the default DNS resolvers always trust anyone
+	this.add_record( 'NS', '.', 'sim.root-servers.net.', 1 );
+	this.add_record( 'A', 'sim.root-servers.net.', 'DR1', 1 );
 
 	// Authority resolver settings for . holder
 	if ( agent.id == 'DR1' )
