@@ -166,10 +166,12 @@ this.log_level && this.log( "query_dns_server: type=" + type + ", fqdn=" + dn + 
 	},
 	query_ddns_recursive: function ( type, dn )
 	{
+		/*
 		// First try to find direct record about dn
 		var res_local_query = this.query_local( type, dn );
 		if ( ! res_local_query.is_error() )
 			return res_local_query;
+		*/
 
 		/*
 			- we need to descend to root _always_ because spoofer can make fake subrecord (with lower trust)
