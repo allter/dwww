@@ -4,7 +4,7 @@
 	TODO: proper (c) boilerplate
 */
 
-// class for x-dwww protocol handler
+// _class for x-dwww protocol handler
 function Proto_dwww( agent )
 {
 	this.agent = agent;

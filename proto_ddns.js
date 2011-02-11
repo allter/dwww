@@ -4,7 +4,7 @@
 	TODO: proper (c) boilerplate
 */
 
-// Class for x-ddns protocol handler
+// _class for x-ddns protocol handler
 function Proto_ddns ( agent )
 {
 	this.agent = agent;
@@ -147,7 +147,7 @@ Proto_ddns.prototype = {
 		var parts1 = parts[1].split( '?', 2 );
 		var dn = parts1[0];
 		var type;
-		var class = 'IN';
+		var _class = 'IN';
 		if ( parts1[1] )
 		{
 			var parts2 = parts1[1].split( '&' );

@@ -4,7 +4,7 @@
 	TODO: proper (c) boilerplate
 */
 
-// class of Response, a convention for DWWW method responses
+// _class of Response, a convention for DWWW method responses
 function Response( content, status )
 {
 	this.content = content;
@@ -42,16 +42,16 @@ Response.prototype = {
 
 function DNSResponse ()
 {
-	this.info = []; // name, value, type, class, source_id, trust, derived_from_id
-	//this.query = []; // name, type, class
+	this.info = []; // name, value, type, _class, source_id, trust, derived_from_id
+	//this.query = []; // name, type, _class
 	//this.source_id = ''; // server's ID
 }
 DNSResponse.prototype = new Response();
 DNSResponse.prototype.type = function () { return 'application/x-dns-response'; }
 
-DNSResponse.prototype.add_query = function ( name, type, class )
+DNSResponse.prototype.add_query = function ( name, type, _class )
 {
-	this.query = [ name, type, ( class || 'IN' ) ];
+	this.query = [ name, type, ( _class || 'IN' ) ];
 	return this; // Allows chaining
 };
 DNSResponse.prototype.q_type = function ( ) { return this.query[ 1 ]; }
@@ -63,12 +63,12 @@ DNSResponse.prototype.add_source_id = function ( source_id )
 	this.source_id = source_id;
 	return this; // Allows chaining
 };
-DNSResponse.prototype.add_info = function ( name, value, type, class, trust, derived_from_id )
+DNSResponse.prototype.add_info = function ( name, value, type, _class, trust, derived_from_id )
 {
 	//                0     1      2
 	this.info.push( [ name, value, type,
 	//  3                  4                 5
-		( class || 'IN' ), ( trust || 1 ), ( derived_from_id || this.source_id ) ] );
+		( _class || 'IN' ), ( trust || 1 ), ( derived_from_id || this.source_id ) ] );
 	this.status = 200;
 	return this; // Allows chaining
 };
