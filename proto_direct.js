@@ -85,6 +85,6 @@ this.log( uri.authority_is_address() );
 */
 
 		return new Response( null, 404 );
-	},
+	}
 };
 

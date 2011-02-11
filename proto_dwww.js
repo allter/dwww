@@ -67,6 +67,6 @@ Proto_dwww.prototype = {
 	  }
 
 		return new Response( null, 404 );
-	},
+	}
 };
 
