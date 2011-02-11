@@ -51,6 +51,6 @@ Proto_sha1hash.prototype = {
 		}
 
 		return new Response( null, 404 );
-	},
+	}
 };
 
